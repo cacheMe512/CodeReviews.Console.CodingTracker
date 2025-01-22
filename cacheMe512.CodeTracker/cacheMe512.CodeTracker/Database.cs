@@ -28,9 +28,9 @@ internal static class Database
 
     internal static void InitializeDatabase()
     {
-        if (LogLevel == "Debug" && File.Exists("session-logger.db"))
+        if (LogLevel == "Debug" && File.Exists("code-tracker.db"))
         {
-            File.Delete("session-logger.db");
+            File.Delete("code-tracker.db");
             Console.WriteLine("Existing database deleted for testing.");
         }
 
@@ -42,6 +42,7 @@ internal static class Database
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
                         StartTime TEXT NOT NULL,
                         EndTime TEXT NOT NULL,
+                        Duration INTEGER NOT NULL
                     );";
             command.ExecuteNonQuery();
 
@@ -63,12 +64,14 @@ internal static class Database
             TimeSpan randomDuration = new TimeSpan(randomHours, randomMinutes, 0);
 
             DateTime endTime = DateTime.Parse(start).Add(randomDuration);
+            int totalSeconds = (int)randomDuration.TotalSeconds;
 
             command.CommandText =
-                "INSERT INTO coding_sessions (StartTime, EndTime) VALUES (@start, @end);";
+                "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@start, @end, @duration);";
 
             command.Parameters.AddWithValue("@start", start);
             command.Parameters.AddWithValue("@end", endTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            command.Parameters.AddWithValue("@duration", totalSeconds);
             command.ExecuteNonQuery();
             command.Parameters.Clear();
         }
