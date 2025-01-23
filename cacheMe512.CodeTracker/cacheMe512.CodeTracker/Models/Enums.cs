@@ -6,7 +6,8 @@
         {
             ViewSessions,
             AddSession,
-            DeleteSession
+            DeleteSession,
+            Exit
         }
     }
 }

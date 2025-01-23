@@ -1,9 +1,10 @@
 ﻿using Spectre.Console;
 
 using static cacheMe512.CodeTracker.Models.Enums;
+using cacheMe512.CodeTracker.Models;
 
 
-namespace cacheMe512.CodeTracker.Models;
+namespace cacheMe512.CodeTracker;
 
 internal class UserInterface
 {
@@ -14,10 +15,9 @@ internal class UserInterface
         while (true)
         {
             Console.Clear();
-
             var actionChoice = AnsiConsole.Prompt(
                 new SelectionPrompt<MenuAction>()
-                .Title("What do you want to do next?")
+                .Title("MAIN MENU")
                 .AddChoices(Enum.GetValues<MenuAction>()));
 
             switch (actionChoice)
@@ -29,8 +29,10 @@ internal class UserInterface
                     AddSession(_sessionsController);
                     break;
                 case MenuAction.DeleteSession:
-                    //_sessionsController.DeleteSession();
+                    DeleteSession(_sessionsController);
                     break;
+                case MenuAction.Exit:
+                    return;
             }
 
         }
@@ -72,6 +74,44 @@ internal class UserInterface
 
         sessionsController.InsertSession(newSession);
 
-        AnsiConsole.MarkupLine("[green]Session added successfully![/]");
+        Validation.DisplayMessage("Session added successfully!", "green");
+        AnsiConsole.MarkupLine("Press Any Key to Continue.");
+        Console.ReadKey();
+    }
+
+    private static void DeleteSession(SessionsController sessionsController)
+    {
+        var sessionsToDelete = sessionsController.GetAllSessions();
+        if(!sessionsToDelete.Any())
+        {
+            Validation.DisplayMessage("No coding sessions available to delete.[/]", "red");
+            Console.ReadKey();
+            return;
+        }
+
+        var sessionToDelete = AnsiConsole.Prompt(
+            new SelectionPrompt<CodingSession>()
+                .Title("Select a coding session to [red]delete[/]:")
+                .UseConverter(s => $"Start: {s.StartTime} End: {s.EndTime} Duration: {s.Duration}")
+                .AddChoices(sessionsToDelete));
+
+        if(Validation.ConfirmDeletion(sessionToDelete))
+        {
+            if(sessionsController.DeleteSession(sessionToDelete.Id))
+            {
+                Validation.DisplayMessage("Session deleted successfully!");
+            }
+            else
+            {
+                Validation.DisplayMessage("Session not found.", "red");
+            }
+        }
+        else
+        {
+            Validation.DisplayMessage("Deletion canceled.");
+        }
+
+        AnsiConsole.MarkupLine("Press Any Key to Continue.");
+        Console.ReadKey();
     }
 }

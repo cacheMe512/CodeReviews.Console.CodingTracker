@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using cacheMe512.CodeTracker.Models;
+using Spectre.Console;
 using System.Globalization;
 
 namespace cacheMe512.CodeTracker
@@ -40,6 +41,20 @@ namespace cacheMe512.CodeTracker
         public static string GetStringInput(string message)
         {
             return AnsiConsole.Ask<string>(message);
+        }
+
+        public static bool ConfirmDeletion(CodingSession session)
+        {
+            var confirm = AnsiConsole.Confirm($"Are you sure you want to delete the following session:\n" +
+                $"[red]Session #{session.Id} - start: {session.StartTime} " +
+                $"end: {session.EndTime} duration: {session.Duration}[/]?");
+
+            return confirm;
+        }
+
+        public static void DisplayMessage(string message, string color = "yellow")
+        {
+            AnsiConsole.MarkupLine($"[{color}]{message}[/]");
         }
     }
 }

@@ -49,4 +49,18 @@ internal class SessionsController
         command.ExecuteNonQuery();
     }
 
+    public bool DeleteSession(int id)
+    {
+        using var connection = Database.GetConnection();
+        var command = connection.CreateCommand();
+
+        command.CommandText = "DELETE FROM coding_sessions WHERE Id = @Id";
+        command.Parameters.AddWithValue("@Id", id);
+
+        int rowsAffected = command.ExecuteNonQuery();
+
+        return rowsAffected > 0;
+    }
+
+
 }
