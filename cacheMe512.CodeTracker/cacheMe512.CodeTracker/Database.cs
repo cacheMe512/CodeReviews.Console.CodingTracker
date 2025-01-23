@@ -1,4 +1,5 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using Dapper;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 
 namespace cacheMe512.CodeTracker;
@@ -36,24 +37,21 @@ internal static class Database
 
         using (var connection = GetConnection())
         {
-            var command = connection.CreateCommand();
-            command.CommandText =
+            connection.Execute(
                 @"CREATE TABLE IF NOT EXISTS coding_sessions (
                         Id INTEGER PRIMARY KEY AUTOINCREMENT,
                         StartTime TEXT NOT NULL,
                         EndTime TEXT NOT NULL,
                         Duration INTEGER NOT NULL
-                    );";
-            command.ExecuteNonQuery();
+                    );");
 
             SeedData(connection);
         }
     }
     private static void SeedData(SqliteConnection connection)
     {
-        var command = connection.CreateCommand();
-
         var random = new Random();
+
         for (int i = 0; i < 100; i++)
         {
             string start = DateTime.Now.AddDays(-random.Next(0, 30)).ToString("yyyy-MM-dd HH:mm:ss");
@@ -66,18 +64,11 @@ internal static class Database
             DateTime endTime = DateTime.Parse(start).Add(randomDuration);
             int totalSeconds = (int)randomDuration.TotalSeconds;
 
-            command.CommandText =
-                "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@start, @end, @duration);";
-
-            command.Parameters.AddWithValue("@start", start);
-            command.Parameters.AddWithValue("@end", endTime.ToString("yyyy-MM-dd HH:mm:ss"));
-            command.Parameters.AddWithValue("@duration", totalSeconds);
-            command.ExecuteNonQuery();
-            command.Parameters.Clear();
+            connection.Execute(
+                "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@Start, @End, @Duration)",
+                new { Start = start, End = endTime.ToString("yyyy-MM-dd HH:mm:ss"), Duration = totalSeconds });
         }
 
         Console.WriteLine("Database seeded with sample data.");
     }
-
-
 }
