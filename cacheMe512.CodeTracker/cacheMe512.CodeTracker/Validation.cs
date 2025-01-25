@@ -23,6 +23,15 @@ namespace cacheMe512.CodeTracker
             return dateTime;
         }
 
+        public static bool DateTimeInSequence(DateTime startTime, DateTime endTime)
+        {
+            int result = DateTime.Compare(startTime, endTime);
+
+            if(result > 0)
+                return false;
+            return true;
+        }
+
         public static int GetNumberInput(string message)
         {
             int number;

@@ -63,9 +63,24 @@ internal class UserInterface
 
     private static void AddSession(SessionsController sessionsController)
     {
-        DateTime startTime = Validation.GetDateTimeInput("Enter the session start time using format (dd-MM-yy HH:mm):");
-        DateTime endTime = Validation.GetDateTimeInput("Enter the session end time using format (dd-MM-yy HH:mm):");
-        
+        DateTime startTime;
+        DateTime endTime;
+
+        while (true)
+        {
+            startTime = Validation.GetDateTimeInput("Enter the session start time using format (dd-MM-yy HH:mm):");
+            endTime = Validation.GetDateTimeInput("Enter the session end time using format (dd-MM-yy HH:mm):");
+
+            if (Validation.DateTimeInSequence(startTime, endTime))
+            {
+                break;
+            }
+            else
+            {
+                Validation.DisplayMessage("End date must be later than Start date\n", "red");
+            }
+        }
+
         var newSession = new CodingSession
         {
             StartTime = startTime,
