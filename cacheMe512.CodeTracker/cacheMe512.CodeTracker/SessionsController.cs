@@ -7,27 +7,67 @@ internal class SessionsController
 {
     public IEnumerable<CodingSession> GetAllSessions()
     {
-        using var connection = Database.GetConnection();
-        var sessions = connection.Query<CodingSession>(
-            "SELECT Id, StartTime, EndTime, Duration AS DurationInSeconds FROM coding_sessions").ToList();
+        try
+        {
+            using var connection = Database.GetConnection();
+            var sessions = connection.Query<CodingSession>(
+                "SELECT Id, StartTime, EndTime, Duration AS DurationInSeconds FROM coding_sessions").ToList();
 
-        return sessions;
+            return sessions;
+        }
+        catch (Exception ex)
+        {
+            Validation.DisplayMessage($"Error retrieving sessions: {ex.Message}", "red");
+            return Enumerable.Empty<CodingSession>();
+        }
     }
 
     public void InsertSession(CodingSession session)
     {
-        using var connection = Database.GetConnection();
-        connection.Execute(
-            "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@StartTime, @EndTime, @Duration)",
-            new { StartTime = session.StartTime, EndTime = session.EndTime, Duration = session.CalculateDuration().TotalSeconds });
+        try
+        {
+            using var connection = Database.GetConnection();
+            using var transaction = connection.BeginTransaction();
+            int durationInSeconds = (int)session.CalculateDuration().TotalSeconds;
+
+            connection.Execute(
+                "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@StartTime, @EndTime, @Duration)",
+                new { StartTime = session.StartTime, EndTime = session.EndTime, Duration = durationInSeconds },
+                transaction: transaction);
+
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            Validation.DisplayMessage($"Error inserting session: {ex.Message}", "red");
+        }
     }
 
     public bool DeleteSession(int id)
     {
-        using var connection = Database.GetConnection();
-        var rowsAffected = connection.Execute(
-            "DELETE FROM coding_sessions WHERE Id = @Id", new { Id = id });
+        try
+        {
+            using var connection = Database.GetConnection();
+            using var transaction = connection.BeginTransaction();
 
-        return rowsAffected > 0;
+            var rowsAffected = connection.Execute(
+                "DELETE FROM coding_sessions WHERE Id = @Id", new { Id = id }, transaction: transaction);
+
+            if (rowsAffected > 0)
+            {
+                transaction.Commit();
+                return true;
+            }
+
+            transaction.Rollback();
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Validation.DisplayMessage($"Error deleting session: {ex.Message}", "red");
+            return false;
+        }
     }
+
+
 }
