@@ -48,27 +48,33 @@ internal static class Database
             SeedData(connection);
         }
     }
+
     private static void SeedData(SqliteConnection connection)
     {
         var random = new Random();
 
         for (int i = 0; i < 100; i++)
         {
-            string start = DateTime.Now.AddDays(-random.Next(0, 30)).ToString("yyyy-MM-dd HH:mm:ss");
+            DateTime start = DateTime.Now.AddDays(-random.Next(0, 30));
 
-            int randomHours = random.Next(0, 9);
-            int randomMinutes = random.Next(0, 60);
+            int randomHour = random.Next(0, 24);
+            int randomMinute = random.Next(0, 60);
+            int randomSecond = random.Next(0, 60);
 
-            TimeSpan randomDuration = new TimeSpan(randomHours, randomMinutes, 0);
+            start = new DateTime(start.Year, start.Month, start.Day, randomHour, randomMinute, randomSecond);
 
-            DateTime endTime = DateTime.Parse(start).Add(randomDuration);
+            int randomDurationMinutes = random.Next(15, 121);
+            TimeSpan randomDuration = TimeSpan.FromMinutes(randomDurationMinutes);
+
+            DateTime endTime = start.Add(randomDuration);
             int totalSeconds = (int)randomDuration.TotalSeconds;
 
             connection.Execute(
                 "INSERT INTO coding_sessions (StartTime, EndTime, Duration) VALUES (@Start, @End, @Duration)",
-                new { Start = start, End = endTime.ToString("yyyy-MM-dd HH:mm:ss"), Duration = totalSeconds });
+                new { Start = start.ToString("yyyy-MM-dd HH:mm:ss"), End = endTime.ToString("yyyy-MM-dd HH:mm:ss"), Duration = totalSeconds });
         }
 
         Console.WriteLine("Database seeded with sample data.");
     }
+
 }
