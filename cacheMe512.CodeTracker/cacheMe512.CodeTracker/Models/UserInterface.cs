@@ -2,6 +2,7 @@
 
 using static cacheMe512.CodeTracker.Models.Enums;
 using cacheMe512.CodeTracker.Models;
+using System.Diagnostics;
 
 
 namespace cacheMe512.CodeTracker;
@@ -9,6 +10,8 @@ namespace cacheMe512.CodeTracker;
 internal class UserInterface
 {
     private readonly SessionsController _sessionsController = new();
+    private static Stopwatch _stopwatch = new Stopwatch();
+    private static DateTime _sessionStartTime;
 
     internal void MainMenu()
     {
@@ -27,6 +30,12 @@ internal class UserInterface
                     break;
                 case MenuAction.AddSession:
                     AddSession(_sessionsController);
+                    break;
+                case MenuAction.StartNewSession:
+                    StartNewSession();
+                    break;
+                case MenuAction.EndSession:
+                    EndSession(_sessionsController);
                     break;
                 case MenuAction.DeleteSession:
                     DeleteSession(_sessionsController);
@@ -90,6 +99,48 @@ internal class UserInterface
         sessionsController.InsertSession(newSession);
 
         Validation.DisplayMessage("Session added successfully!", "green");
+        AnsiConsole.MarkupLine("Press Any Key to Continue.");
+        Console.ReadKey();
+    }
+
+    private static void StartNewSession()
+    {
+        if (_stopwatch.IsRunning)
+        {
+            Validation.DisplayMessage("A session is already running!", "red");
+            return;
+        }
+
+        _sessionStartTime = DateTime.Now;
+        _stopwatch.Start();
+
+        Validation.DisplayMessage("Session started! Tracking your time...", "green");
+        AnsiConsole.MarkupLine("Press Any Key to Continue.");
+        Console.ReadKey();
+    }
+
+    private static void EndSession(SessionsController sessionsController)
+    {
+        if (!_stopwatch.IsRunning)
+        {
+            Validation.DisplayMessage("No active session to stop!", "red");
+            return;
+        }
+
+        _stopwatch.Stop();
+        DateTime endTime = DateTime.Now;
+        string duration = (_stopwatch.Elapsed).ToString(@"hh\:mm\:ss");
+
+        var newSession = new CodingSession
+        {
+            StartTime = _sessionStartTime,
+            EndTime = endTime,
+        };
+
+        sessionsController.InsertSession(newSession);
+
+        Validation.DisplayMessage($"Session ended! Duration: {duration}. Session saved.", "green");
+        _stopwatch.Reset();
         AnsiConsole.MarkupLine("Press Any Key to Continue.");
         Console.ReadKey();
     }
