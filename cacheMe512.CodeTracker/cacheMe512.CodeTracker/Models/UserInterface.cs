@@ -37,6 +37,9 @@ internal class UserInterface
                 case MenuAction.EndSession:
                     EndSession(_sessionsController);
                     break;
+                case MenuAction.UpdateSession:
+                    UpdateSession(_sessionsController);
+                    break;
                 case MenuAction.DeleteSession:
                     DeleteSession(_sessionsController);
                     break;
@@ -144,6 +147,42 @@ internal class UserInterface
         AnsiConsole.MarkupLine("Press Any Key to Continue.");
         Console.ReadKey();
     }
+
+    private static void UpdateSession(SessionsController sessionsController)
+    {
+        var sessionsToUpdate = sessionsController.GetAllSessions();
+        if (!sessionsToUpdate.Any())
+        {
+            Validation.DisplayMessage("No coding sessions available to update.", "red");
+            Console.ReadKey();
+            return;
+        }
+
+        var sessionToUpdate = AnsiConsole.Prompt(
+            new SelectionPrompt<CodingSession>()
+                .Title("Select a coding session to update:")
+                .UseConverter(s => $"Session {s.Id} - Start: {s.StartTime} End: {s.EndTime} Duration: {s.Duration}")
+                .AddChoices(sessionsToUpdate));
+
+        DateTime newStartTime = Validation.GetDateTimeInput("Enter the new session start time (dd-MM-yy HH:mm):");
+        DateTime newEndTime = Validation.GetDateTimeInput("Enter the new session end time (dd-MM-yy HH:mm):");
+
+        if (!Validation.DateTimeInSequence(newStartTime, newEndTime))
+        {
+            Validation.DisplayMessage("End time must be later than start time.", "red");
+            return;
+        }
+
+        sessionToUpdate.StartTime = newStartTime;
+        sessionToUpdate.EndTime = newEndTime;
+
+        sessionsController.UpdateSession(sessionToUpdate);
+
+        Validation.DisplayMessage("Session updated successfully!", "green");
+        AnsiConsole.MarkupLine("Press Any Key to Continue.");
+        Console.ReadKey();
+    }
+
 
     private static void DeleteSession(SessionsController sessionsController)
     {

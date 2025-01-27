@@ -8,6 +8,7 @@
             AddSession,
             StartNewSession,
             EndSession,
+            UpdateSession,
             DeleteSession,
             Exit
         }

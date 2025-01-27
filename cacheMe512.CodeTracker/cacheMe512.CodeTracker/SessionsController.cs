@@ -43,6 +43,28 @@ internal class SessionsController
         }
     }
 
+    public void UpdateSession(CodingSession session)
+    {
+        try
+        {
+            using var connection = Database.GetConnection();
+            using var transaction = connection.BeginTransaction();
+
+            int durationInSeconds = (int)session.CalculateDuration().TotalSeconds;
+
+            connection.Execute(
+                "UPDATE coding_sessions SET StartTime = @StartTime, EndTime = @EndTime, Duration = @Duration WHERE Id = @Id",
+                new { StartTime = session.StartTime, EndTime = session.EndTime, Duration = durationInSeconds, Id = session.Id },
+                transaction: transaction);
+
+            transaction.Commit();
+        }
+        catch (Exception ex)
+        {
+            Validation.DisplayMessage($"Error updating session: {ex.Message}", "red");
+        }
+    }
+
     public bool DeleteSession(int id)
     {
         try
